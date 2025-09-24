@@ -1,15 +1,65 @@
 <script setup>
 import RecentActivityFeed from "@/components/RecentActivityFeed.vue";
+import ScheduledPostsTimeline from "@/components/ScheduledPostsTimeline.vue";
 import TotalFollowersCard from "@/components/TotalFollowersCard.vue";
+import { VIcon } from 'vuetify/components'
+
 
 const followersSeries = [
   {
     data: [120, 140, 180, 200, 230, 250, 270],
   },
 ];
+
+// Fake user data (can later be replaced with props or store data)
+const user = {
+  name: 'Kelvin Speed',
+  package: 'Pro Plan',
+  status: 'Active',
+  color: 'success', // could be success, warning, error depending on status
+}
 </script>
 
+
+
+
 <template>
+   <VCard class="pa-5 mb-4" rounded="lg" elevation="1">
+    <div class="d-flex flex-column flex-sm-row justify-space-between align-center gap-4">
+      
+      <!-- Left: Greeting -->
+      <div>
+        <h4 class="text-h5 font-weight-medium mb-2">
+          👋 Welcome back, {{ user.name }}
+        </h4>
+        <div class="d-flex align-center">
+          <VIcon icon="tabler-star" color="primary" class="me-2" />
+          <span class="text-body-1">
+            Current Package: <strong>{{ user.package }}</strong>
+          </span>
+        </div>
+        <div class="mt-1">
+          <VChip
+            :color="user.color"
+            size="small"
+            label
+          >
+            Status: {{ user.status }}
+          </VChip>
+        </div>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="d-flex gap-3">
+        <VBtn color="primary" variant="flat" prepend-icon="tabler-settings">
+          Manage Subscription
+        </VBtn>
+        <VBtn color="success" variant="outlined" prepend-icon="tabler-arrow-up">
+          Upgrade
+        </VBtn>
+      </div>
+    </div>
+  </VCard>
   <VRow class="match-height">
     <!-- Accounts Connected -->
     <VCol cols="12" md="4">
@@ -63,7 +113,7 @@ const followersSeries = [
   </VRow>
 
   <VRow class="match-height">
-    <VCol cols="12">
+    <VCol cols="8">
       <VCard class="pa-4 py-3" outlined>
         <VCardItem>
           <VCardTitle class="text-h4 font-weight-bold"
@@ -74,5 +124,17 @@ const followersSeries = [
         <RecentActivityFeed />
       </VCard>
     </VCol>
+    <VCol>
+    
+
+        <ScheduledPostsTimeline />
+    
+    </VCol>
   </VRow>
 </template>
+
+<style scoped>
+.welcome-card {
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+}
+</style>

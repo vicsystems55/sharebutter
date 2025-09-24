@@ -9,13 +9,13 @@ import { AppContentLayoutNav, ContentWidth, FooterType, NavbarType } from '@layo
 
 export const { themeConfig, layoutConfig } = defineThemeConfig({
   app: {
-    title: 'Bridge',
+    title: 'Share Butter',
    logo: h('div', {
       style: 'line-height:0;',
     }, [
       h('img', {
         src: logo,
-        alt: 'Bridge Logo',
+        alt: 'ShareButter Logo',
         style: 'height: 32px;', // ⬅️ adjust as needed
       }),
     ]),
