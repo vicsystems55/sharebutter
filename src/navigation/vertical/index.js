@@ -3,7 +3,8 @@ export default [
   {
     title: 'Dashboard',
     icon: { icon: 'tabler-layout-dashboard' },
-    to: { name: 'dashboard' },
+    to:{ path: '/' }
+   
   },
   {
     title: 'Opportunities',
