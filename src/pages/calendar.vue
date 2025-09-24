@@ -1,184 +1,122 @@
-<template>
-  <div>
-    <h1>Calendar</h1>
-    <p>Visual scheduler for upcoming and past posts.</p>
+<script setup>
+import FullCalendar from '@fullcalendar/vue3'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import listPlugin from '@fullcalendar/list'
+import { useCalendarStore } from '@/views/apps/calendar/useCalendarStore'
+import CalendarDrawer from './CalendarDrawer.vue'
 
-    <div class="card">
-      <div class="row">
-        <div class="col add-event-section">
-          <button @click="showModal = true" class="add-event-button">Add Event</button>
-          <div id="small-calendar"></div>
-        </div>
-        <div class="col calendar-section">
-          <div id="calendar"></div>
-        </div>
-      </div>
-    </div>
+const store = useCalendarStore()
 
-    <div v-if="showModal" class="modal">
-      <div class="modal-content">
-        <span class="close" @click="showModal = false">&times;</span>
-        <h2>Add Event</h2>
-        <form @submit.prevent="addEvent">
-          <div>
-            <label for="eventTitle">Event Title</label>
-            <input type="text" id="eventTitle" v-model="newEvent.title" required />
-          </div>
-          <div>
-            <label for="eventStart">Start Date</label>
-            <input type="datetime-local" id="eventStart" v-model="newEvent.start" required />
-          </div>
-          <div>
-            <label for="eventEnd">End Date</label>
-            <input type="datetime-local" id="eventEnd" v-model="newEvent.end" />
-          </div>
-          <div>
-            <label for="eventColor">Event Color</label>
-            <input type="color" id="eventColor" v-model="newEvent.color" />
-          </div>
-          <button type="submit">Add Event</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</template>
+const isDrawerOpen = ref(false)
+const selectedEvent = ref(null)
 
-<script>
-import { Calendar } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import listPlugin from '@fullcalendar/list';
-import timeGridPlugin from '@fullcalendar/timegrid';
-
-export default {
-  data() {
-    return {
-      calendar: null,
-      smallCalendar: null,
-      showModal: false,
-      newEvent: {
-        title: '',
-        start: '',
-        end: '',
-        color: '#007BB6',
-      },
-    };
-  },
-  mounted() {
-    const calendarEl = document.getElementById('calendar');
-    this.calendar = new Calendar(calendarEl, {
-      plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
-      initialView: 'dayGridMonth',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-      },
-      events: [
-        {
-          title: 'Business Meeting',
-          start: '2025-07-14T10:30:00',
-          end: '2025-07-14T12:30:00',
-          color: '#007BB6',
-        },
-        {
-          title: 'Conference',
-          start: '2025-07-15',
-          end: '2025-07-17',
-          color: '#55ACEE',
-        },
-        {
-          title: 'Holiday',
-          start: '2025-07-20',
-          color: '#28a745',
-        },
-      ],
-    });
-    this.calendar.render();
-
-    const smallCalendarEl = document.getElementById('small-calendar');
-    this.smallCalendar = new Calendar(smallCalendarEl, {
-      plugins: [dayGridPlugin],
-      initialView: 'dayGridMonth',
-      headerToolbar: false,
-    });
-    this.smallCalendar.render();
-  },
-  methods: {
-    addEvent() {
-      this.calendar.addEvent(this.newEvent);
-      this.newEvent = {
-        title: '',
-        start: '',
-        end: '',
-        color: '#007BB6',
-      };
-      this.showModal = false;
+const handleDateClick = info => {
+  selectedEvent.value = {
+    title: '',
+    start: info.dateStr,
+    end: info.dateStr,
+    allDay: true,
+    extendedProps: {
+      calendar: 'Personal',
+      description: '',
+      location: '',
+      guests: [],
     },
+  }
+  isDrawerOpen.value = true
+}
+
+const handleEventClick = info => {
+  selectedEvent.value = { ...info.event.extendedProps, ...info.event.toPlainObject() }
+  isDrawerOpen.value = true
+}
+
+const calendarOptions = computed(() => ({
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+  initialView: 'dayGridMonth',
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
   },
-};
+  events: store.events,
+  editable: true,
+  selectable: true,
+  dateClick: handleDateClick,
+  eventClick: handleEventClick,
+  height: 'auto',
+  aspectRatio: 1.6,
+
+  // 👇 Render events as badges
+  eventContent: arg => {
+    return {
+      html: `
+        <span class="event-badge ${arg.event.extendedProps.calendar}">
+          ${arg.event.title}
+        </span>
+      `,
+    }
+  },
+}))
 </script>
 
-<style>
-#calendar {
-  margin-block: 0;
-  margin-inline: auto;
-  max-inline-size: 900px;
+<template>
+  <VCard class="h-100">
+    <VCardTitle class="text-h5">
+      Calendar
+    </VCardTitle>
+    <VCardText>
+      <div class="calendar-wrapper">
+        <FullCalendar :options="calendarOptions" />
+      </div>
+    </VCardText>
+  </VCard>
+
+  <CalendarDrawer
+    v-model:is-drawer-open="isDrawerOpen"
+    :event="selectedEvent"
+    @add-event="store.addEvent"
+    @update-event="store.updateEvent"
+    @remove-event="store.removeEvent"
+  />
+</template>
+
+<style scoped>
+.calendar-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
-.card {
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 10%);
-  margin-block-end: 20px;
+:deep(.fc) {
+  font-size: 0.85rem;
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-}
-
-.col {
-  flex: 1;
-  margin-inline: 10px;
-}
-
-.add-event-button {
-  border: none;
-  border-radius: 4px;
-  background-color: #007bb6;
+:deep(.event-badge) {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
   color: white;
-  cursor: pointer;
-  padding-block: 10px;
-  padding-inline: 15px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
-.add-event-button:hover {
-  background-color: #005f8a;
+/* Different badge colors per calendar type */
+:deep(.event-badge.Personal) {
+  background-color: #1976d2; /* Vuetify primary */
 }
-
-.modal {
-  position: fixed;
-  padding: 20px;
-  background-color: white;
-  block-size: 100%;
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 50%);
-  inline-size: 300px;
-  inset-block-start: 0;
-  inset-inline-end: 0;
-  overflow-y: auto;
+:deep(.event-badge.Work) {
+  background-color: #2e7d32; /* green */
 }
-
-.modal-content {
-  display: flex;
-  flex-direction: column;
+:deep(.event-badge.Reminder) {
+  background-color: #fbc02d; /* yellow */
+  color: black;
 }
-
-.close {
-  position: absolute;
-  cursor: pointer;
-  font-size: 1.5rem;
-  inset-block-start: 10px;
-  inset-inline-end: 10px;
+:deep(.event-badge.Social) {
+  background-color: #d32f2f; /* red */
 }
 </style>
